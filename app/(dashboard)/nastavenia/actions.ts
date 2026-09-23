@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { requireMember } from "@/lib/auth";
 import { fail, list, num, str, type ActionResult } from "@/lib/form";
 import { pullCalendarChanges } from "@/lib/google/calendar";
@@ -76,6 +76,7 @@ export async function syncCalendarNow(): Promise<ActionResult & { message?: stri
   try {
     const stats = await pullCalendarChanges();
     if (!stats) return fail("Google Kalendár nie je pripojený");
+    updateTag("google-events");
     revalidatePath("/", "layout");
     return { ok: true, message: `Aktualizované: ${stats.updated}, nové: ${stats.created}, odpojené: ${stats.unlinked}` };
   } catch (e) {
@@ -89,6 +90,7 @@ export async function disconnectGoogle(): Promise<ActionResult> {
     const admin = createAdminClient();
     await admin.from("google_connection").delete().eq("id", 1);
     await admin.from("tasks").update({ google_event_id: null }).not("google_event_id", "is", null);
+    updateTag("google-events");
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (e) {

@@ -1,4 +1,6 @@
 import "server-only";
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { google, type calendar_v3 } from "googleapis";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decrypt } from "@/lib/crypto";
@@ -24,23 +26,31 @@ export function oauthClient(redirectUri?: string) {
   return new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, redirectUri);
 }
 
-async function getConnection(): Promise<Connection | null> {
+// V rámci jednej požiadavky sa pripojenie načíta z DB len raz
+const getConnection = cache(async (): Promise<Connection | null> => {
   const admin = createAdminClient();
   const { data } = await admin.from("google_connection").select("*").eq("id", 1).maybeSingle();
   return (data as Connection | null) ?? null;
-}
+});
 
 export async function getConnectionInfo() {
   const c = await getConnection();
   return c ? { googleEmail: c.google_email, lastSyncedAt: c.last_synced_at } : null;
 }
 
+// OAuth klient držíme medzi požiadavkami (kým beží serverless inštancia),
+// aby sa access token neobnovoval pri každom načítaní stránky
+let apiCache: { key: string; api: calendar_v3.Calendar } | null = null;
+
 async function calendarApi() {
   const conn = await getConnection();
   if (!conn) return null;
-  const auth = oauthClient();
-  auth.setCredentials({ refresh_token: decrypt(conn.refresh_token_encrypted) });
-  return { api: google.calendar({ version: "v3", auth }), conn };
+  if (apiCache?.key !== conn.refresh_token_encrypted) {
+    const auth = oauthClient();
+    auth.setCredentials({ refresh_token: decrypt(conn.refresh_token_encrypted) });
+    apiCache = { key: conn.refresh_token_encrypted, api: google.calendar({ version: "v3", auth }) };
+  }
+  return { api: apiCache.api, conn };
 }
 
 // ---------------------------------------------------------------------------
@@ -249,8 +259,24 @@ export type CalendarEvent = {
   url: string | null;
 };
 
+/** Udalosti z hlavného kalendára – cache 5 minút, aby stránky nečakali na Google */
+const cachedPrimaryEvents = unstable_cache(fetchPrimaryEvents, ["google-primary-events"], {
+  revalidate: 300,
+  tags: ["google-events"],
+});
+
 export async function listPrimaryEvents(fromISO: string, toISO: string): Promise<CalendarEvent[]> {
   try {
+    return await cachedPrimaryEvents(fromISO, toISO);
+  } catch (e) {
+    // chyby sa necachujú – ďalšie načítanie to skúsi znova
+    console.error("[calendar] list primary failed", e);
+    return [];
+  }
+}
+
+async function fetchPrimaryEvents(fromISO: string, toISO: string): Promise<CalendarEvent[]> {
+  {
     const ctx = await calendarApi();
     if (!ctx) return [];
     const res = await ctx.api.events.list({
@@ -275,9 +301,6 @@ export async function listPrimaryEvents(fromISO: string, toISO: string): Promise
           url: ev.htmlLink ?? null,
         };
       });
-  } catch (e) {
-    console.error("[calendar] list primary failed", e);
-    return [];
   }
 }
 

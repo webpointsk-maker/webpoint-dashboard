@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { after } from "next/server";
 import { AlertTriangle, CalendarClock, CheckCircle2, Euro, Users } from "lucide-react";
@@ -21,13 +22,12 @@ export default async function DashboardPage() {
   const weekEnd = addDaysISO(today, 7);
   const month = monthStartISO();
 
-  const [clients, packages, profiles, tasks, payments, events] = await Promise.all([
+  const [clients, packages, profiles, tasks, payments] = await Promise.all([
     getClients(),
     getPackages(),
     getProfiles(),
     getTasks({ openOnly: true }),
     getPayments({ from: addDaysISO(month, -365) }),
-    listPrimaryEvents(today, today),
   ]);
 
   const active = clients.filter((c) => c.status === "active");
@@ -35,6 +35,7 @@ export default async function DashboardPage() {
   const pipeline = clients.filter((c) => c.status === "lead" || c.status === "onboarding");
 
   const monthPayments = payments.filter((p) => p.period === month);
+  const invoicedThisMonth = monthPayments.reduce((s, p) => s + Number(p.amount), 0);
   const paidThisMonth = monthPayments.filter((p) => p.status === "paid");
   const unpaid = payments
     .map((p) => ({ ...p, eff: effectiveStatus(p) }))
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
 
       <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <KpiCard tone="blue" icon={Users} label="Aktívni klienti" value={String(active.length)} hint={pipeline.length ? `+ ${pipeline.length} v skúšobnej dobe / leady` : undefined} href="/klienti" />
-        <KpiCard tone="orange" icon={Euro} label="Mesačný príjem (MRR)" value={formatEur(mrr)} hint={`zaplatené ${paidThisMonth.length}/${monthPayments.length} za ${formatMonth(month, true)}`} href="/platby" />
+        <KpiCard tone="orange" icon={Euro} label="Mesačný príjem (dohodnuté ceny)" value={formatEur(mrr)} hint={`${formatMonth(month, true)}: v platbách ${formatEur(invoicedThisMonth)} · zaplatené ${paidThisMonth.length}/${monthPayments.length}`} href="/platby" />
         <KpiCard
           icon={AlertTriangle}
           label="Po splatnosti"
@@ -120,20 +121,9 @@ export default async function DashboardPage() {
               </CardAction>
             </CardHeader>
             <CardContent>
-              {events.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Žiadne udalosti</p>
-              ) : (
-                <ul className="grid gap-2">
-                  {events.map((e) => (
-                    <li key={e.id} className="flex items-baseline gap-3 text-sm">
-                      <span className="w-12 shrink-0 text-xs text-muted-foreground tabular-nums">{e.time ?? "celý deň"}</span>
-                      <a href={e.url ?? "#"} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate hover:underline">
-                        {e.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <Suspense fallback={<div className="h-20 animate-pulse rounded-lg bg-white/[0.04]" />}>
+                <TodayEvents date={today} />
+              </Suspense>
             </CardContent>
           </Card>
 
@@ -188,5 +178,22 @@ export default async function DashboardPage() {
         </div>
       </div>
     </>
+  );
+}
+
+async function TodayEvents({ date }: { date: string }) {
+  const events = await listPrimaryEvents(date, date);
+  if (events.length === 0) return <p className="text-sm text-muted-foreground">Žiadne udalosti</p>;
+  return (
+    <ul className="grid gap-2">
+      {events.map((e) => (
+        <li key={e.id} className="flex items-baseline gap-3 text-sm">
+          <span className="w-12 shrink-0 text-xs text-brand-orange-light tabular-nums">{e.time ?? "celý deň"}</span>
+          <a href={e.url ?? "#"} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate hover:text-brand-orange">
+            {e.title}
+          </a>
+        </li>
+      ))}
+    </ul>
   );
 }

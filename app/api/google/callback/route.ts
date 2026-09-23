@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 import { google } from "googleapis";
 import { requireMember } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
     for (const t of tasks ?? []) await pushTaskToCalendar(t.id);
     await pullCalendarChanges();
 
+    revalidateTag("google-events", { expire: 0 });
     const res = NextResponse.redirect(`${origin}/nastavenia?google=connected`);
     res.cookies.delete("g_oauth_state");
     return res;
