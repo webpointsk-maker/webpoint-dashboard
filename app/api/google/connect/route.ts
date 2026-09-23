@@ -16,6 +16,6 @@ export async function GET(request: Request) {
     state,
   });
   const res = NextResponse.redirect(url);
-  res.cookies.set("g_oauth_state", state, { httpOnly: true, secure: true, sameSite: "lax", maxAge: 600, path: "/" });
+  res.cookies.set("g_oauth_state", state, { httpOnly: true, secure: request.url.startsWith("https:"), sameSite: "lax", maxAge: 600, path: "/" });
   return res;
 }
