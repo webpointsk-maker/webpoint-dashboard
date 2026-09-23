@@ -11,14 +11,14 @@ const MESSAGES: Record<string, [ "success" | "error", string ]> = {
   "no-refresh": ["error", "Google nevrátil refresh token – odober aplikácii prístup v nastaveniach Google účtu a skús znova"],
 };
 
-export function GoogleStatusToast({ status }: { status?: string }) {
+export function GoogleStatusToast({ status, reason }: { status?: string; reason?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   useEffect(() => {
     const msg = status ? MESSAGES[status] : undefined;
     if (!msg) return;
-    toast[msg[0]](msg[1]);
+    toast[msg[0]](msg[1], reason ? { description: reason, duration: 30000 } : undefined);
     router.replace(pathname);
-  }, [status, router, pathname]);
+  }, [status, reason, router, pathname]);
   return null;
 }

@@ -12,8 +12,13 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 
-  if (profile.role !== "admin" || !code || !state || state !== request.cookies.get("g_oauth_state")?.value) {
-    return NextResponse.redirect(`${origin}/nastavenia?google=error`);
+  const fail = (reason: string) =>
+    NextResponse.redirect(`${origin}/nastavenia?google=error&reason=${encodeURIComponent(reason.slice(0, 300))}`);
+
+  if (searchParams.get("error")) return fail(`Google: ${searchParams.get("error")}`);
+  if (profile.role !== "admin") return fail("Pripojiť kalendár môže len administrátor");
+  if (!code || !state || state !== request.cookies.get("g_oauth_state")?.value) {
+    return fail("Neplatný stav prihlásenia (cookie) – skús to znova v tom istom okne prehliadača");
   }
 
   try {
@@ -36,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     const admin = createAdminClient();
-    await admin.from("google_connection").upsert({
+    const { error: saveError } = await admin.from("google_connection").upsert({
       id: 1,
       connected_by: profile.id,
       google_email: me.email ?? null,
@@ -45,6 +50,7 @@ export async function GET(request: NextRequest) {
       sync_token: null,
       last_synced_at: null,
     });
+    if (saveError) throw new Error(`Uloženie do databázy zlyhalo: ${saveError.message}`);
 
     // Prvotná synchronizácia: existujúce tasky s termínom → kalendár, potom načítanie z kalendára
     const { data: tasks } = await admin.from("tasks").select("id").not("due_date", "is", null).is("google_event_id", null);
@@ -56,6 +62,6 @@ export async function GET(request: NextRequest) {
     return res;
   } catch (e) {
     console.error("[google] callback failed", e);
-    return NextResponse.redirect(`${origin}/nastavenia?google=error`);
+    return fail(e instanceof Error ? e.message : String(e));
   }
 }

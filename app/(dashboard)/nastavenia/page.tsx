@@ -11,7 +11,7 @@ import { getConnectionInfo } from "@/lib/google/calendar";
 export const metadata = { title: "Nastavenia · WebPoint" };
 
 export default async function SettingsPage(props: PageProps<"/nastavenia">) {
-  const { google } = await props.searchParams;
+  const { google, reason } = await props.searchParams;
   const { supabase, profile } = await requireMember();
   const isAdmin = profile.role === "admin";
 
@@ -33,7 +33,7 @@ export default async function SettingsPage(props: PageProps<"/nastavenia">) {
 
   return (
     <>
-      <GoogleStatusToast status={typeof google === "string" ? google : undefined} />
+      <GoogleStatusToast status={typeof google === "string" ? google : undefined} reason={typeof reason === "string" ? reason : undefined} />
       <PageHeader title="Nastavenia" />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="lg:col-span-2">
