@@ -37,8 +37,8 @@ export function MonthCalendar({
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border">
-        <div className="grid grid-cols-7 border-b bg-muted/40 text-center text-xs font-medium text-muted-foreground">
+      <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-card/80 shadow-xl shadow-black/20 backdrop-blur">
+        <div className="grid grid-cols-7 border-b border-white/[0.07] bg-white/[0.02] text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           {WEEKDAYS.map((d) => (
             <div key={d} className="py-2">
               {d}
@@ -54,16 +54,17 @@ export function MonthCalendar({
               <div
                 key={day}
                 className={cn(
-                  "group relative min-h-24 border-b p-1 sm:min-h-28 sm:p-1.5",
+                  "group relative min-h-24 border-b border-white/[0.05] p-1 transition-colors hover:bg-white/[0.02] sm:min-h-28 sm:p-1.5",
                   i % 7 !== 6 && "border-r",
-                  !inMonth && "bg-muted/30 text-muted-foreground",
+                  !inMonth && "bg-black/20 text-muted-foreground/60",
+                  day === today && "bg-brand-orange/[0.04]",
                 )}
               >
                 <div className="mb-1 flex items-center justify-between">
                   <span
                     className={cn(
                       "flex size-6 items-center justify-center rounded-full text-xs tabular-nums",
-                      day === today && "bg-primary font-semibold text-primary-foreground",
+                      day === today && "bg-brand-orange font-bold text-primary-foreground shadow-md shadow-brand-orange/30",
                     )}
                   >
                     {Number(day.slice(8))}
@@ -71,7 +72,7 @@ export function MonthCalendar({
                   <button
                     type="button"
                     onClick={() => setNewOn(day)}
-                    className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-muted focus:opacity-100"
+                    className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:bg-brand-orange/15 hover:text-brand-orange focus:opacity-100"
                     aria-label="Pridať task"
                   >
                     <Plus className="size-3.5" />
@@ -86,10 +87,10 @@ export function MonthCalendar({
                       className={cn(
                         "truncate rounded px-1 py-0.5 text-left text-[11px] leading-tight",
                         t.status === "done"
-                          ? "bg-muted text-muted-foreground line-through"
+                          ? "bg-white/5 text-muted-foreground line-through"
                           : t.due_date! < today
-                            ? "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
-                            : "bg-primary/10 text-foreground",
+                            ? "bg-red-500/15 text-red-200 ring-1 ring-inset ring-red-500/30"
+                            : "bg-brand-blue/15 text-blue-100 ring-1 ring-inset ring-brand-blue/30 hover:bg-brand-blue/25",
                       )}
                       title={`${t.client?.name ? `[${t.client.name}] ` : ""}${t.title}`}
                     >
@@ -105,7 +106,7 @@ export function MonthCalendar({
                       href={e.url ?? "#"}
                       target="_blank"
                       rel="noreferrer"
-                      className="truncate rounded border border-dashed px-1 py-0.5 text-[11px] leading-tight text-muted-foreground hover:bg-muted"
+                      className="truncate rounded border border-dashed border-brand-orange/30 px-1 py-0.5 text-[11px] leading-tight text-brand-orange-light/80 hover:bg-brand-orange/10"
                       title={e.title}
                     >
                       {e.time ? <span className="tabular-nums">{e.time} </span> : null}

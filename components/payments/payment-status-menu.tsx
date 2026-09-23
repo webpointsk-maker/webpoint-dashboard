@@ -34,14 +34,18 @@ export function PaymentStatusMenu({ payment, onEdit, showAmount }: { payment: Pa
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "inline-flex flex-col items-center rounded-lg px-2 py-1 text-xs font-medium whitespace-nowrap transition-opacity hover:opacity-80",
+          "inline-flex min-w-20 flex-col items-center rounded-lg px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all hover:brightness-125",
           PAYMENT_STATUS[status].className,
           pending && "opacity-50",
         )}
-        title={`Splatnosť ${formatDate(payment.due_date)}${payment.paid_at ? ` · zaplatené ${formatDate(payment.paid_at)}` : ""}`}
+        title={`${payment.installment > 1 ? `${payment.installment}. splátka · ` : ""}Splatnosť ${formatDate(payment.due_date)}${payment.paid_at ? ` · zaplatené ${formatDate(payment.paid_at)}` : ""}`}
       >
         <span>{PAYMENT_STATUS[status].label}</span>
-        {showAmount ? <span className="font-normal tabular-nums opacity-80">{formatEur(payment.amount)}</span> : null}
+        {showAmount ? (
+          <span className="font-normal tabular-nums opacity-80">
+            {formatEur(payment.amount)} · {formatDate(payment.due_date, { day: "numeric", month: "numeric" })}
+          </span>
+        ) : null}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="center">
         {(["paid", "pending", "overdue"] as PaymentStatus[]).map((s) => (

@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import { Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { Field } from "@/components/field";
 import { saveClient } from "@/app/(dashboard)/klienti/actions";
 import { CLIENT_STATUS, PLATFORMS } from "@/lib/constants";
 import { formatEur } from "@/lib/format";
-import type { Client, Package, Profile } from "@/lib/types";
+import type { Client, Installment, Package, Profile } from "@/lib/types";
 
 type Props = {
   open: boolean;
@@ -25,6 +26,16 @@ type Props = {
 export function ClientFormDialog({ open, onOpenChange, client, packages, profiles }: Props) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const [hasSchedule, setHasSchedule] = useState(Boolean(client?.payment_schedule?.length));
+  const [schedule, setSchedule] = useState<Installment[]>(
+    client?.payment_schedule?.length
+      ? client.payment_schedule
+      : [
+          { day: 1, amount: 0 },
+          { day: 15, amount: 0 },
+        ],
+  );
+  const scheduleTotal = schedule.reduce((s, i) => s + (Number(i.amount) || 0), 0);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -84,12 +95,66 @@ export function ClientFormDialog({ open, onOpenChange, client, packages, profile
                 ))}
               </NativeSelect>
             </Field>
-            <Field label="Vlastná cena €/mes. (nepovinné)" htmlFor="custom_price">
-              <Input id="custom_price" name="custom_price" type="number" step="0.01" min="0" defaultValue={client?.custom_price ?? ""} placeholder="podľa balíka" />
-            </Field>
-            <Field label="Deň splatnosti (1–28)" htmlFor="billing_day">
-              <Input id="billing_day" name="billing_day" type="number" min="1" max="28" defaultValue={client?.billing_day ?? 15} />
-            </Field>
+            {!hasSchedule ? (
+              <>
+                <Field label="Dohodnutá cena €/mes." htmlFor="custom_price">
+                  <Input id="custom_price" name="custom_price" type="number" step="0.01" min="0" defaultValue={client?.custom_price ?? ""} placeholder="podľa balíka" />
+                </Field>
+                <Field label="Deň splatnosti (1–28)" htmlFor="billing_day">
+                  <Input id="billing_day" name="billing_day" type="number" min="1" max="28" defaultValue={client?.billing_day ?? 15} />
+                </Field>
+              </>
+            ) : (
+              <input type="hidden" name="billing_day" value={schedule[0]?.day ?? 1} />
+            )}
+            <div className="grid gap-2 sm:col-span-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="has_schedule" checked={hasSchedule} onChange={(e) => setHasSchedule(e.target.checked)} className="accent-primary" />
+                Platí v splátkach (viac platieb mesačne)
+              </label>
+              {hasSchedule ? (
+                <div className="grid gap-2 rounded-lg bg-white/[0.03] p-2.5 ring-1 ring-white/[0.06]">
+                  {schedule.map((row, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="w-16 shrink-0 text-xs text-muted-foreground">{i + 1}. splátka</span>
+                      <Input
+                        name="schedule_day"
+                        type="number"
+                        min="1"
+                        max="28"
+                        value={row.day}
+                        onChange={(e) => setSchedule((s) => s.map((r, j) => (j === i ? { ...r, day: Number(e.target.value) } : r)))}
+                        className="w-20"
+                        aria-label="Deň"
+                      />
+                      <span className="text-xs text-muted-foreground">. deň</span>
+                      <Input
+                        name="schedule_amount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={row.amount || ""}
+                        onChange={(e) => setSchedule((s) => s.map((r, j) => (j === i ? { ...r, amount: Number(e.target.value) } : r)))}
+                        className="w-28"
+                        placeholder="suma €"
+                        aria-label="Suma"
+                      />
+                      {schedule.length > 1 ? (
+                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => setSchedule((s) => s.filter((_, j) => j !== i))} aria-label="Odstrániť splátku">
+                          <X />
+                        </Button>
+                      ) : null}
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setSchedule((s) => [...s, { day: 20, amount: 0 }])}>
+                      <Plus /> Pridať splátku
+                    </Button>
+                    <span className="text-xs text-muted-foreground">Spolu {formatEur(scheduleTotal)} / mes.</span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
             <Field label="Spolupráca od" htmlFor="start_date">
               <Input id="start_date" name="start_date" type="date" defaultValue={client?.start_date ?? ""} />
             </Field>

@@ -41,7 +41,8 @@ export function PaymentDialog({ onOpenChange, clientName, payment, draft }: Prop
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {clientName} · {period ? formatMonth(period) : ""}
+            {clientName}
+            {payment ? ` · ${formatMonth(period)}` : " · nová platba"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="grid gap-4">
@@ -49,7 +50,9 @@ export function PaymentDialog({ onOpenChange, clientName, payment, draft }: Prop
           {draft ? (
             <>
               <input type="hidden" name="client_id" value={draft.clientId} />
-              <input type="hidden" name="period" value={draft.period} />
+              <Field label="Za mesiac" htmlFor="period_month">
+                <Input id="period_month" name="period_month" type="month" required defaultValue={draft.period.slice(0, 7)} />
+              </Field>
             </>
           ) : null}
           <div className="grid grid-cols-2 gap-4">

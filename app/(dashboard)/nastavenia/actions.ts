@@ -16,6 +16,8 @@ export async function savePackage(formData: FormData): Promise<ActionResult> {
     monthly_price: num(formData, "monthly_price") ?? 0,
     description: str(formData, "description"),
     posts_per_month: num(formData, "posts_per_month"),
+    reels_per_month: num(formData, "reels_per_month"),
+    campaigns_per_month: num(formData, "campaigns_per_month"),
     platforms: list(formData, "platforms"),
     is_active: formData.get("is_active") !== "off",
   };

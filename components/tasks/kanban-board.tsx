@@ -11,6 +11,12 @@ import { cn } from "@/lib/utils";
 import type { Profile, Task, TaskStatus, TaskWithClient } from "@/lib/types";
 
 const COLUMNS: TaskStatus[] = ["todo", "in_progress", "review", "done"];
+const COLUMN_DOT: Record<TaskStatus, string> = {
+  todo: "bg-zinc-400",
+  in_progress: "bg-brand-blue",
+  review: "bg-violet-400",
+  done: "bg-emerald-400",
+};
 
 export function KanbanBoard({ tasks, clients, profiles }: { tasks: TaskWithClient[]; clients: ClientOption[]; profiles: Profile[] }) {
   const [, startTransition] = useTransition();
@@ -45,11 +51,17 @@ export function KanbanBoard({ tasks, clients, profiles }: { tasks: TaskWithClien
               }}
               onDragLeave={() => setDragOver((s) => (s === status ? null : s))}
               onDrop={(e) => drop(status, e.dataTransfer.getData("text/plain"))}
-              className={cn("flex min-h-40 flex-col gap-2 rounded-xl bg-muted/50 p-2 transition-colors", dragOver === status && "bg-muted ring-2 ring-ring/30")}
+              className={cn(
+                "flex min-h-48 flex-col gap-2 rounded-2xl bg-white/[0.025] p-2 ring-1 ring-white/[0.05] transition-all",
+                dragOver === status && "bg-brand-blue/[0.06] ring-2 ring-brand-blue/40",
+              )}
             >
-              <header className="flex items-center justify-between px-1.5 pt-1 pb-0.5">
-                <h3 className="text-sm font-medium">{TASK_STATUS[status].label}</h3>
-                <span className="text-xs text-muted-foreground tabular-nums">{items.length}</span>
+              <header className="flex items-center justify-between px-1.5 pt-1 pb-1">
+                <h3 className="flex items-center gap-2 text-sm font-semibold">
+                  <span className={cn("size-2 rounded-full", COLUMN_DOT[status])} />
+                  {TASK_STATUS[status].label}
+                </h3>
+                <span className="rounded-md bg-white/5 px-1.5 text-xs text-muted-foreground tabular-nums">{items.length}</span>
               </header>
               {items.map((t) => {
                 const overdue = status !== "done" && t.due_date != null && t.due_date < todayISO();
@@ -59,13 +71,13 @@ export function KanbanBoard({ tasks, clients, profiles }: { tasks: TaskWithClien
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData("text/plain", t.id)}
                     onClick={() => setEditing(t)}
-                    className="cursor-grab rounded-lg border bg-card p-3 shadow-xs transition-shadow hover:shadow-sm active:cursor-grabbing"
+                    className="cursor-grab rounded-xl border border-white/[0.07] bg-card p-3 shadow-md shadow-black/20 transition-all hover:-translate-y-px hover:border-brand-blue/40 active:cursor-grabbing"
                   >
                     <p className={cn("text-sm font-medium", status === "done" && "text-muted-foreground line-through")}>{t.title}</p>
                     <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                      <span>{t.client?.name ?? "Interné"}</span>
+                      <span className="font-medium text-brand-blue-light">{t.client?.name ?? "Interné"}</span>
                       {t.due_date ? (
-                        <span className={cn(overdue && "font-medium text-red-600 dark:text-red-400")}>
+                        <span className={cn(overdue && "font-medium text-red-400")}>
                           · {formatDate(t.due_date, { day: "numeric", month: "numeric" })} ({relativeDue(t.due_date)})
                         </span>
                       ) : null}

@@ -17,6 +17,8 @@ export type Package = {
   monthly_price: number;
   description: string | null;
   posts_per_month: number | null;
+  reels_per_month: number | null;
+  campaigns_per_month: number | null;
   platforms: string[];
   is_active: boolean;
 };
@@ -34,16 +36,20 @@ export type Client = {
   custom_price: number | null;
   start_date: string | null;
   billing_day: number;
+  payment_schedule: Installment[] | null;
   platforms: string[];
   assigned_to: string | null;
   notes: string | null;
   created_at: string;
 };
 
+export type Installment = { day: number; amount: number };
+
 export type Payment = {
   id: string;
   client_id: string;
   period: string;
+  installment: number;
   amount: number;
   due_date: string;
   status: PaymentStatus;

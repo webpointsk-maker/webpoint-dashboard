@@ -3,6 +3,7 @@ import { after } from "next/server";
 import { AlertTriangle, CalendarClock, CheckCircle2, Euro, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
 import { StatusPill } from "@/components/status-badge";
+import { KpiCard } from "@/components/kpi-card";
 import { TaskList } from "@/components/tasks/task-list";
 import { clientPrice, getClients, getPackages, getPayments, getProfiles, getTasks } from "@/lib/data";
 import { listPrimaryEvents, maybePullCalendarChanges } from "@/lib/google/calendar";
@@ -51,30 +52,33 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Ahoj{firstName ? `, ${firstName}` : ""} 👋</h1>
-        <p className="mt-1 text-sm text-muted-foreground capitalize">
+      <div className="mb-8">
+        <p className="text-sm font-medium text-brand-orange capitalize">
           {new Intl.DateTimeFormat("sk-SK", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Bratislava" }).format(new Date())}
         </p>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight">
+          Ahoj{firstName ? <>, <span className="text-brand-gradient">{firstName}</span></> : ""} 👋
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">Tu je prehľad klientov, deadlinov a platieb.</p>
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi icon={Users} label="Aktívni klienti" value={String(active.length)} hint={pipeline.length ? `+ ${pipeline.length} v pipeline` : undefined} href="/klienti" />
-        <Kpi icon={Euro} label="Mesačný príjem (MRR)" value={formatEur(mrr)} hint={`zaplatené ${paidThisMonth.length}/${monthPayments.length} za ${formatMonth(month, true)}`} href="/platby" />
-        <Kpi
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <KpiCard tone="blue" icon={Users} label="Aktívni klienti" value={String(active.length)} hint={pipeline.length ? `+ ${pipeline.length} v skúšobnej dobe / leady` : undefined} href="/klienti" />
+        <KpiCard tone="orange" icon={Euro} label="Mesačný príjem (MRR)" value={formatEur(mrr)} hint={`zaplatené ${paidThisMonth.length}/${monthPayments.length} za ${formatMonth(month, true)}`} href="/platby" />
+        <KpiCard
           icon={AlertTriangle}
           label="Po splatnosti"
           value={formatEur(overdueSum)}
           hint={overdue.length ? `${overdue.length} ${overdue.length === 1 ? "platba" : overdue.length < 5 ? "platby" : "platieb"}` : "všetko v poriadku"}
-          tone={overdue.length ? "text-red-600 dark:text-red-400" : undefined}
+          tone={overdue.length ? "red" : "green"}
           href="/platby"
         />
-        <Kpi
+        <KpiCard
           icon={CalendarClock}
           label="Tasky po termíne"
           value={String(overdueTasks.length)}
           hint={`${todayTasks.length} dnes · ${weekTasks.length} tento týždeň`}
-          tone={overdueTasks.length ? "text-red-600 dark:text-red-400" : undefined}
+          tone={overdueTasks.length ? "red" : "neutral"}
           href="/tasky?termin=overdue"
         />
       </div>
@@ -140,7 +144,7 @@ export default async function DashboardPage() {
             <CardContent>
               {unpaid.length === 0 ? (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="size-4 text-emerald-600" /> Všetko zaplatené
+                  <CheckCircle2 className="size-4 text-emerald-400" /> Všetko zaplatené
                 </p>
               ) : (
                 <ul className="grid gap-2.5">
@@ -184,22 +188,5 @@ export default async function DashboardPage() {
         </div>
       </div>
     </>
-  );
-}
-
-function Kpi({ icon: Icon, label, value, hint, tone, href }: { icon: React.ElementType; label: string; value: string; hint?: string; tone?: string; href: string }) {
-  return (
-    <Link href={href} className="group">
-      <Card size="sm" className="h-full transition-shadow group-hover:shadow-md">
-        <CardContent>
-          <div className="flex items-center justify-between text-muted-foreground">
-            <p className="text-xs">{label}</p>
-            <Icon className="size-4" />
-          </div>
-          <p className={`mt-1.5 text-2xl font-semibold tracking-tight tabular-nums ${tone ?? ""}`}>{value}</p>
-          {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
-        </CardContent>
-      </Card>
-    </Link>
   );
 }

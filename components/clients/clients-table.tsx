@@ -82,11 +82,11 @@ export function ClientsTable({ rows, packages, profiles }: { rows: ClientRow[]; 
         </div>
       </div>
 
-      <div className="rounded-xl border">
+      <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-card/80 shadow-xl shadow-black/20 backdrop-blur">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Klient</TableHead>
+            <TableRow className="border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.02] [&>th]:h-11 [&>th]:text-xs [&>th]:font-semibold [&>th]:tracking-wide [&>th]:text-muted-foreground [&>th]:uppercase">
+              <TableHead className="pl-4">Klient</TableHead>
               <TableHead>Stav</TableHead>
               <TableHead className="hidden md:table-cell">Balík</TableHead>
               <TableHead className="text-right">€ / mes.</TableHead>
@@ -104,9 +104,9 @@ export function ClientsTable({ rows, packages, profiles }: { rows: ClientRow[]; 
               </TableRow>
             ) : null}
             {filtered.map((r) => (
-              <TableRow key={r.id} className="relative">
-                <TableCell>
-                  <Link href={`/klienti/${r.id}`} className="font-medium after:absolute after:inset-0 hover:underline">
+              <TableRow key={r.id} className="relative border-white/[0.05] hover:bg-white/[0.03]">
+                <TableCell className="py-3 pl-4">
+                  <Link href={`/klienti/${r.id}`} className="font-medium after:absolute after:inset-0 hover:text-brand-orange">
                     {r.name}
                   </Link>
                   <div className="text-xs text-muted-foreground">{r.assignedName ?? r.contact ?? ""}</div>
@@ -114,13 +114,19 @@ export function ClientsTable({ rows, packages, profiles }: { rows: ClientRow[]; 
                 <TableCell>
                   <StatusPill {...CLIENT_STATUS[r.status]} />
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{r.packageName ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                <TableCell className="text-right tabular-nums">{r.price ? formatEur(r.price) : "—"}</TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {r.packageName ? (
+                    <span className="rounded-md bg-brand-blue/10 px-1.5 py-0.5 text-xs font-semibold text-brand-blue-light ring-1 ring-brand-blue/20">{r.packageName}</span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">na mieru</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right font-medium tabular-nums">{r.price ? formatEur(r.price) : <span className="text-muted-foreground">—</span>}</TableCell>
                 <TableCell className="hidden sm:table-cell">
                   {r.paymentStatus ? <StatusPill {...PAYMENT_STATUS[r.paymentStatus]} /> : <span className="text-xs text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell className="hidden lg:table-cell text-right tabular-nums">{r.openTasks || <span className="text-muted-foreground">0</span>}</TableCell>
-                <TableCell className={cn("hidden lg:table-cell text-sm", r.nextDue && r.nextDue < today && "font-medium text-red-600 dark:text-red-400")}>
+                <TableCell className={cn("hidden lg:table-cell text-sm", r.nextDue && r.nextDue < today && "font-medium text-red-400")}>
                   {r.nextDue ? `${formatDate(r.nextDue, { day: "numeric", month: "numeric" })} · ${relativeDue(r.nextDue)}` : <span className="text-muted-foreground">—</span>}
                 </TableCell>
               </TableRow>

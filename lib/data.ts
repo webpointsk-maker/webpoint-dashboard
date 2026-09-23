@@ -46,7 +46,7 @@ export async function getTasks(opts: { clientId?: string; openOnly?: boolean; fr
 
 export async function getPayments(opts: { from?: string; to?: string; clientId?: string } = {}) {
   const { supabase } = await requireMember();
-  let q = supabase.from("payments").select("*").order("period", { ascending: false });
+  let q = supabase.from("payments").select("*").order("period", { ascending: false }).order("installment");
   if (opts.from) q = q.gte("period", opts.from);
   if (opts.to) q = q.lte("period", opts.to);
   if (opts.clientId) q = q.eq("client_id", opts.clientId);
@@ -54,8 +54,9 @@ export async function getPayments(opts: { from?: string; to?: string; clientId?:
   return (data ?? []) as Payment[];
 }
 
-/** Mesačná cena klienta – vlastná cena má prednosť pred cenou balíka */
+/** Mesačná cena klienta – splátky, potom vlastná cena, potom cena balíka */
 export function clientPrice(client: Client, packages: Package[]) {
+  if (client.payment_schedule?.length) return client.payment_schedule.reduce((s, i) => s + Number(i.amount), 0);
   if (client.custom_price != null) return Number(client.custom_price);
   const pkg = packages.find((p) => p.id === client.package_id);
   return pkg ? Number(pkg.monthly_price) : 0;

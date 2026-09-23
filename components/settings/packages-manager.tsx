@@ -28,18 +28,26 @@ export function PackagesManager({ packages, usage }: { packages: Package[]; usag
 
   return (
     <div className="grid gap-3">
-      <ul className="divide-y rounded-lg border">
+      <ul className="grid gap-2">
         {packages.map((p) => (
-          <li key={p.id} className="flex items-center gap-3 px-3 py-2.5">
+          <li key={p.id} className="flex items-center gap-3 rounded-xl bg-white/[0.03] px-3 py-3 ring-1 ring-white/[0.06]">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">
-                {p.name} {!p.is_active ? <span className="text-xs font-normal text-muted-foreground">(neaktívny)</span> : null}
+              <p className="flex items-baseline gap-2 text-sm font-semibold">
+                <span className="font-heading">{p.name}</span>
+                <span className="font-heading text-brand-orange tabular-nums">{formatEur(p.monthly_price)}</span>
+                <span className="text-xs font-normal text-muted-foreground">/ mes.</span>
+                {!p.is_active ? <span className="text-xs font-normal text-muted-foreground">(neaktívny)</span> : null}
               </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {formatEur(p.monthly_price)} / mes.
-                {p.posts_per_month ? ` · ${p.posts_per_month} príspevkov` : ""}
-                {p.platforms.length ? ` · ${p.platforms.map((x) => PLATFORMS[x] ?? x).join(", ")}` : ""}
-                {` · ${usage[p.id] ?? 0} klientov`}
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                {[
+                  p.reels_per_month ? `${p.reels_per_month}× reels` : null,
+                  p.posts_per_month ? `${p.posts_per_month}× posty` : null,
+                  p.campaigns_per_month ? `${p.campaigns_per_month}× kampaň` : null,
+                  p.platforms.length ? p.platforms.map((x) => PLATFORMS[x] ?? x).join(", ") : null,
+                  `${usage[p.id] ?? 0} klientov`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             </div>
             <Button variant="ghost" size="icon-sm" onClick={() => setEditing(p)} aria-label="Upraviť">
@@ -90,13 +98,19 @@ function PackageDialog({ pkg, onClose }: { pkg: Package | null; onClose: () => v
             <Field label="Cena € / mes." htmlFor="monthly_price">
               <Input id="monthly_price" name="monthly_price" type="number" step="0.01" min="0" required defaultValue={pkg?.monthly_price} />
             </Field>
-            <Field label="Príspevkov / mes." htmlFor="posts_per_month">
+            <label className="flex items-center gap-2 self-end pb-1.5 text-sm sm:col-span-2">
+              <input type="checkbox" name="is_active" value="on" defaultChecked={pkg?.is_active ?? true} className="accent-primary" />
+              Aktívny (ponúkať novým klientom)
+            </label>
+            <Field label="Reels / mes." htmlFor="reels_per_month">
+              <Input id="reels_per_month" name="reels_per_month" type="number" min="0" defaultValue={pkg?.reels_per_month ?? ""} />
+            </Field>
+            <Field label="Statické posty / mes." htmlFor="posts_per_month">
               <Input id="posts_per_month" name="posts_per_month" type="number" min="0" defaultValue={pkg?.posts_per_month ?? ""} />
             </Field>
-            <label className="flex items-center gap-2 self-end pb-1.5 text-sm">
-              <input type="checkbox" name="is_active" value="on" defaultChecked={pkg?.is_active ?? true} className="accent-primary" />
-              Aktívny
-            </label>
+            <Field label="Reklamné kampane" htmlFor="campaigns_per_month">
+              <Input id="campaigns_per_month" name="campaigns_per_month" type="number" min="0" defaultValue={pkg?.campaigns_per_month ?? ""} />
+            </Field>
           </div>
           <div className="grid gap-1.5">
             <span className="text-xs text-muted-foreground">Platformy</span>
@@ -110,7 +124,7 @@ function PackageDialog({ pkg, onClose }: { pkg: Package | null; onClose: () => v
             </div>
           </div>
           <Field label="Čo balík obsahuje" htmlFor="description">
-            <Textarea id="description" name="description" rows={3} defaultValue={pkg?.description ?? ""} />
+            <Textarea id="description" name="description" rows={5} defaultValue={pkg?.description ?? ""} />
           </Field>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

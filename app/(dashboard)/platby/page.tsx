@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Wallet } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { KpiCard } from "@/components/kpi-card";
 import { PageHeader } from "@/components/page-header";
 import { GeneratePaymentsButton } from "@/components/payments/generate-button";
 import { PaymentsGrid, type GridClient } from "@/components/payments/payments-grid";
@@ -29,7 +29,7 @@ export default async function PaymentsPage(props: PageProps<"/platby">) {
   const withPayments = new Set(payments.map((p) => p.client_id));
   const gridClients: GridClient[] = clients
     .filter((c) => c.status === "active" || withPayments.has(c.id))
-    .map((c) => ({ id: c.id, name: c.name, price: clientPrice(c, packages), billingDay: c.billing_day }));
+    .map((c) => ({ id: c.id, name: c.name, price: clientPrice(c, packages), billingDay: c.billing_day, schedule: c.payment_schedule }));
 
   const sum = (status: string) =>
     currentPayments.filter((p) => effectiveStatus(p) === status).reduce((s, p) => s + Number(p.amount), 0);
@@ -42,10 +42,10 @@ export default async function PaymentsPage(props: PageProps<"/platby">) {
       </PageHeader>
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label={`Očakávané · ${formatMonth(current)}`} value={formatEur(expected)} />
-        <Stat label="Zaplatené" value={formatEur(sum("paid"))} tone="text-emerald-600 dark:text-emerald-400" />
-        <Stat label="Čaká na úhradu" value={formatEur(sum("pending"))} tone="text-amber-600 dark:text-amber-400" />
-        <Stat label="Po splatnosti" value={formatEur(sum("overdue"))} tone="text-red-600 dark:text-red-400" />
+        <KpiCard icon={Wallet} tone="blue" label={`Očakávané · ${formatMonth(current)}`} value={formatEur(expected)} />
+        <KpiCard icon={CheckCircle2} tone="green" label="Zaplatené" value={formatEur(sum("paid"))} />
+        <KpiCard icon={Clock} tone="orange" label="Čaká na úhradu" value={formatEur(sum("pending"))} />
+        <KpiCard icon={AlertTriangle} tone={sum("overdue") ? "red" : "neutral"} label="Po splatnosti" value={formatEur(sum("overdue"))} />
       </div>
 
       <div className="mb-3 flex items-center justify-end gap-1">
@@ -62,16 +62,5 @@ export default async function PaymentsPage(props: PageProps<"/platby">) {
 
       <PaymentsGrid clients={gridClients} months={months} payments={payments} />
     </>
-  );
-}
-
-function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
-  return (
-    <Card size="sm">
-      <CardContent>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`mt-1 text-xl font-semibold tabular-nums ${tone ?? ""}`}>{value}</p>
-      </CardContent>
-    </Card>
   );
 }

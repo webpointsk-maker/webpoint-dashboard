@@ -50,7 +50,7 @@ export default async function CalendarPage(props: PageProps<"/kalendar">) {
         </p>
       ) : null}
       <MonthCalendar month={month} tasks={tasks} events={events} clients={clients.map((c) => ({ id: c.id, name: c.name }))} profiles={profiles} />
-      <p className="mt-3 text-xs text-muted-foreground">Plné štítky = tasky z dashboardu · prerušované = udalosti z Google Kalendára</p>
+      <p className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground"><span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-brand-blue/60" /> tasky z dashboardu</span><span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-red-500/60" /> po termíne</span><span className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm border border-dashed border-brand-orange/60" /> udalosti z Google Kalendára</span></p>
     </>
   );
 }

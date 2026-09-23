@@ -11,6 +11,14 @@ export async function saveClient(formData: FormData): Promise<ActionResult> {
   const name = str(formData, "name");
   if (!name) return fail("Názov klienta je povinný");
 
+  const schedule =
+    formData.get("has_schedule") === "on"
+      ? formData
+          .getAll("schedule_day")
+          .map((d, i) => ({ day: Number(d), amount: Number(String(formData.getAll("schedule_amount")[i] ?? "").replace(",", ".")) }))
+          .filter((s) => s.day >= 1 && s.day <= 28 && s.amount > 0)
+      : [];
+
   const row = {
     name,
     contact_person: str(formData, "contact_person"),
@@ -20,7 +28,8 @@ export async function saveClient(formData: FormData): Promise<ActionResult> {
     website: str(formData, "website"),
     status: (str(formData, "status") ?? "active") as ClientStatus,
     package_id: str(formData, "package_id"),
-    custom_price: num(formData, "custom_price"),
+    custom_price: schedule.length ? schedule.reduce((s, i) => s + i.amount, 0) : num(formData, "custom_price"),
+    payment_schedule: schedule.length ? schedule : null,
     start_date: str(formData, "start_date"),
     billing_day: Math.min(28, Math.max(1, num(formData, "billing_day") ?? 15)),
     platforms: list(formData, "platforms"),

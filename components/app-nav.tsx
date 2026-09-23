@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { signOut } from "@/app/actions";
+import { Logo } from "@/components/brand";
 import { initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
@@ -24,7 +25,7 @@ const NAV = [
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   return (
-    <nav className="grid gap-0.5">
+    <nav className="grid gap-1">
       {NAV.map(({ href, label, icon: Icon }) => {
         const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
@@ -33,11 +34,17 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-              active && "bg-muted text-foreground",
+              "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-white/[0.04] hover:text-foreground",
+              active && "bg-gradient-to-r from-brand-orange/15 via-brand-orange/[0.06] to-transparent text-foreground",
             )}
           >
-            <Icon className="size-4" />
+            <span
+              className={cn(
+                "absolute top-1/2 left-0 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-brand-orange opacity-0 transition-opacity",
+                active && "opacity-100",
+              )}
+            />
+            <Icon className={cn("size-[18px] transition-colors", active ? "text-brand-orange" : "group-hover:text-brand-blue-light")} />
             {label}
           </Link>
         );
@@ -48,17 +55,16 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 function Brand() {
   return (
-    <Link href="/" className="flex items-center gap-2.5 px-2.5">
-      <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">W</div>
-      <span className="font-semibold">WebPoint</span>
+    <Link href="/" className="flex items-center px-2">
+      <Logo />
     </Link>
   );
 }
 
 function UserBox({ profile }: { profile: Profile }) {
   return (
-    <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2">
-      <Avatar className="size-8">
+    <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.03] px-2.5 py-2">
+      <Avatar className="size-8 ring-2 ring-brand-orange/40">
         {profile.avatar_url ? <AvatarImage src={profile.avatar_url} alt="" /> : null}
         <AvatarFallback>{initials(profile.full_name ?? profile.email)}</AvatarFallback>
       </Avatar>
@@ -77,9 +83,10 @@ function UserBox({ profile }: { profile: Profile }) {
 
 export function AppSidebar({ profile }: { profile: Profile }) {
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-6 border-r bg-sidebar p-3 pt-5 md:flex">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-8 border-r border-sidebar-border bg-sidebar/90 p-4 pt-6 backdrop-blur md:flex">
       <Brand />
       <div className="flex-1">
+        <p className="mb-2 px-3 text-[11px] font-semibold tracking-wider text-muted-foreground/60 uppercase">Menu</p>
         <NavLinks />
       </div>
       <UserBox profile={profile} />
@@ -90,13 +97,13 @@ export function AppSidebar({ profile }: { profile: Profile }) {
 export function MobileHeader({ profile }: { profile: Profile }) {
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:hidden">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-sidebar/90 px-4 backdrop-blur md:hidden">
       <Brand />
       <Button variant="ghost" size="icon" aria-label="Menu" onClick={() => setOpen(true)}>
         <Menu />
       </Button>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="flex w-72 flex-col gap-6 p-3 pt-5">
+        <SheetContent side="left" className="flex w-72 flex-col gap-8 border-sidebar-border bg-sidebar p-4 pt-6">
           <SheetTitle className="sr-only">Navigácia</SheetTitle>
           <Brand />
           <div className="flex-1">

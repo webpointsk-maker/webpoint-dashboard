@@ -49,9 +49,9 @@ export function TaskList({ tasks, clients, profiles, showClient = true, defaultC
         </div>
       ) : null}
       {tasks.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">{emptyText}</p>
+        <p className="rounded-xl border border-dashed border-white/10 p-6 text-center text-sm text-muted-foreground">{emptyText}</p>
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.015]">
           {tasks.map((t) => (
             <TaskRow key={t.id} task={t} profiles={profiles} showClient={showClient} compact={compact} onEdit={() => openEdit(t)} />
           ))}
@@ -94,7 +94,7 @@ function TaskRow({ task, profiles, showClient, compact, onEdit }: { task: TaskWi
   }
 
   return (
-    <li className={cn("flex items-start gap-3 px-3 py-2.5 transition-opacity", pending && "opacity-50")}>
+    <li className={cn("flex items-start gap-3 px-3 py-2.5 transition-all hover:bg-white/[0.03]", pending && "opacity-50")}>
       <Checkbox className="mt-0.5" checked={done} onCheckedChange={(v) => toggle(Boolean(v))} aria-label="Hotovo" />
       <button type="button" onClick={onEdit} className="min-w-0 flex-1 text-left">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -105,13 +105,13 @@ function TaskRow({ task, profiles, showClient, compact, onEdit }: { task: TaskWi
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
           {showClient && task.client ? (
-            <Link href={`/klienti/${task.client.id}`} onClick={(e) => e.stopPropagation()} className="hover:text-foreground hover:underline">
+            <Link href={`/klienti/${task.client.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-brand-blue-light hover:text-brand-orange">
               {task.client.name}
             </Link>
           ) : null}
           {showClient && !task.client ? <span>Interné</span> : null}
           {task.due_date ? (
-            <span className={cn(overdue && "font-medium text-red-600 dark:text-red-400")}>
+            <span className={cn(overdue && "font-medium text-red-400")}>
               {formatDate(task.due_date, { day: "numeric", month: "numeric" })}
               {task.due_time ? ` ${formatTime(task.due_time)}` : ""} · {relativeDue(task.due_date)}
             </span>
