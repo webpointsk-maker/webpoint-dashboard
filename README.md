@@ -12,6 +12,7 @@ Interný dashboard agentúry WebPoint: klienti, balíky, mesačné platby, tasky
 - **Platby** – mriežka klienti × mesiace, klik na stav = zmena, automatické generovanie paušálov
 - **Kalendár** – mesačný pohľad s deadlinmi aj udalosťami z Google
 - **Nastavenia** – balíky, tím (kto sa môže prihlásiť), pripojenie Google Kalendára
+- **AI asistent** – napíšeš voľným textom, čo treba urobiť, a Claude z toho pripraví tasky (klient, deadline, čas, priorita) na potvrdenie
 
 ## Nastavenie (jednorazovo, ~20 minút)
 
@@ -51,6 +52,14 @@ npm run dev
 ```
 
 Otvor http://localhost:3000, prihlás sa cez Google, v **Nastaveniach** klikni na **Pripojiť Google Kalendár**.
+
+### 5. AI asistent (Claude API)
+
+1. Na [console.anthropic.com](https://console.anthropic.com) sa prihlás, v **Billing** dobi kredit (stačí pár eur – jedno spracovanie stojí rádovo centy).
+2. **API Keys → Create Key** → skopíruj kľúč (`sk-ant-…`).
+3. Vlož ho do `.env.local` ako `ANTHROPIC_API_KEY=` a do Vercelu (**Settings → Environment Variables**), potom **Redeploy**.
+
+Model sa nastavuje v `lib/ai/task-planner.ts` (`AI_MODEL`, predvolene `claude-opus-5-5` s nízkym úsilím pre rýchlu odozvu).
 
 ## Nasadenie na Vercel
 

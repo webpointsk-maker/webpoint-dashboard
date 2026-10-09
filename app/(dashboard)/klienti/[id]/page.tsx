@@ -7,6 +7,7 @@ import { ClientActions } from "@/components/clients/client-actions";
 import { ClientNotes } from "@/components/clients/client-notes";
 import { ClientPayments } from "@/components/clients/client-payments";
 import { TaskList } from "@/components/tasks/task-list";
+import { AiTaskComposer } from "@/components/ai/ai-task-composer";
 import { clientPrice, getClient, getClients, getPackages, getPayments, getProfiles, getTasks } from "@/lib/data";
 import { CLIENT_STATUS, PAYMENT_STATUS, PLATFORMS } from "@/lib/constants";
 import { formatDate, formatEur, monthStartISO } from "@/lib/format";
@@ -81,7 +82,8 @@ export default async function ClientDetailPage(props: PageProps<"/klienti/[id]">
             <CardHeader>
               <CardTitle>Čo treba urobiť ({openTasks.length})</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="grid gap-4">
+              <AiTaskComposer clients={clientOptions} profiles={profiles} defaultClientId={client.id} compact />
               <TaskList tasks={openTasks} clients={clientOptions} profiles={profiles} showClient={false} defaultClientId={client.id} addButton emptyText="Všetko hotové 🎉" />
             </CardContent>
           </Card>

@@ -5,6 +5,7 @@ import { AlertTriangle, CalendarClock, CheckCircle2, Euro, Users } from "lucide-
 import { Card, CardContent, CardHeader, CardTitle, CardAction } from "@/components/ui/card";
 import { StatusPill } from "@/components/status-badge";
 import { KpiCard } from "@/components/kpi-card";
+import { AiTaskComposer } from "@/components/ai/ai-task-composer";
 import { TaskList } from "@/components/tasks/task-list";
 import { clientPrice, getClients, getPackages, getPayments, getProfiles, getTasks } from "@/lib/data";
 import { listPrimaryEvents, maybePullCalendarChanges } from "@/lib/google/calendar";
@@ -61,6 +62,10 @@ export default async function DashboardPage() {
           Ahoj{firstName ? <>, <span className="text-brand-gradient">{firstName}</span></> : ""} 👋
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">Tu je prehľad klientov, deadlinov a platieb.</p>
+      </div>
+
+      <div className="mb-8">
+        <AiTaskComposer clients={clientOptions} profiles={profiles} />
       </div>
 
       <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
